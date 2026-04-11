@@ -1,37 +1,89 @@
+# =========================
+# Clash / Mihomo 完整测试配置
+# 目标：保留日美直连节点
+# =========================
+
+mixed-port: 7890
+allow-lan: true
 mode: rule
 log-level: info
-allow-lan: true
 ipv6: false
+
+profile:
+  store-selected: true
+  store-fake-ip: true
+
+tun:
+  enable: true
+  stack: mixed
+  auto-route: true
+  auto-detect-interface: true
+  dns-hijack:
+    - "any:53"
+    - "tcp://any:53"
+  strict-route: true
 
 dns:
   enable: true
+  ipv6: false
+  listen: 0.0.0.0:1053
   enhanced-mode: fake-ip
-  nameserver:
-    - 119.29.29.29
+  fake-ip-range: 198.18.0.1/16
+  respect-rules: true
+
+  default-nameserver:
     - 223.5.5.5
+    - 119.29.29.29
+
+  nameserver:
+    - https://1.1.1.1/dns-query
+    - https://cloudflare-dns.com/dns-query
+    - https://dns.google/dns-query
+
+  proxy-server-nameserver:
+    - https://1.1.1.1/dns-query
+    - https://cloudflare-dns.com/dns-query
 
 proxies:
-  - name: "🇯🇵 日本-原生直连"
+  # 日本直连
+  - name: "🇯🇵 日本-原生直连 | 0.0x"
     type: vless
     server: 222.0.154.230
     port: 50186
-    uuid: ff1c7549-1710-4697-afaa-2261dfb8ac55
+    uuid: 79a42dc1-4963-4cf7-872e-1e8efe848f54
+    flow: xtls-rprx-vision
     udp: true
     tls: true
     network: tcp
-    flow: xtls-rprx-vision
     servername: init.itunes.apple.com
-    client-fingerprint: chrome
     reality-opts:
       public-key: 8x2CO9vI3dRqUe8ozI1OJjFgT7RWrwUi1KexuunA5WI
       short-id: "82"
+    client-fingerprint: chrome
+
+  # 美国直连
+  - name: "🇺🇸 美国-直连"
+    type: vless
+    server: 168.222.0.174
+    port: 10001
+    uuid: c0009033-64bb-4f76-bb7a-61e69f4d6ef0
+    flow: xtls-rprx-vision
+    udp: true
+    tls: true
+    network: tcp
+    servername: init.itunes.apple.com
+    reality-opts:
+      public-key: IesLCFzKVY4zOyGSxFRg4h9Vlsl_Q0L1O6xkSA2Yjm4
+      short-id: "e2"
+    client-fingerprint: chrome
 
 proxy-groups:
-  - name: 🚀 节点选择
+  - name: "🚀 节点选择 (优先直连)"
     type: select
     proxies:
-      - "🇯🇵 日本-原生直连"
+      - "🇯🇵 日本-原生直连 | 0.0x"
+      - "🇺🇸 美国-直连"
 
 rules:
-  - GEOIP,CN,DIRECT
-  - MATCH,🚀 节点选择
+  - DOMAIN-SUFFIX,xzcloudnode.sbs,DIRECT
+  - MATCH,🚀 节点选择 (优先直连)
